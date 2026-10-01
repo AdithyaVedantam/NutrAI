@@ -1,0 +1,66 @@
+// Database tables. One User has one Profile, many Meals, many DietPlans.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  passwordHash String
+  createdAt    DateTime   @default(now())
+  profile      Profile?
+  meals        Meal[]
+  dietPlans    DietPlan[]
+}
+
+model Profile {
+  id                  Int    @id @default(autoincrement())
+  userId              Int    @unique
+  user                User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                String
+  age                 Int
+  sex                 String // "male" | "female"
+  heightCm            Float
+  weightKg            Float
+  activityLevel       String // sedentary | light | moderate | active | very_active
+  goal                String // lose | maintain | gain
+  diet                String // vegetarian | non_vegetarian | vegan | eggetarian
+  // Calculated by the app (never by the LLM)
+  bmr                 Int
+  maintenanceCalories Int
+  targetCalories      Int
+  proteinG            Int
+  carbsG              Int
+  fatG                Int
+  updatedAt           DateTime @updatedAt
+}
+
+model Meal {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name     String
+  mealType String // breakfast | lunch | snack | dinner
+  calories Int
+  protein  Float
+  carbs    Float
+  fat      Float
+  source   String   @default("manual") // manual | ai
+  eatenAt  DateTime @default(now())
+
+  @@index([userId, eatenAt])
+}
+
+model DietPlan {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mealsCount Int
+  content    Json // the AI-generated plan
+  createdAt  DateTime @default(now())
+}
