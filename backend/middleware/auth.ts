@@ -11,10 +11,11 @@ declare global {
 }
 
 // The server refuses to start without a real secret, so we never sign tokens with a guessable default.
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.startsWith("change-me")) {
+const secretFromEnv = process.env.JWT_SECRET;
+if (!secretFromEnv || secretFromEnv.startsWith("change-me")) {
   throw new Error("JWT_SECRET is missing or still the placeholder. Set a long random value in backend/.env");
 }
+const JWT_SECRET: string = secretFromEnv;
 
 export function signToken(userId: number) {
   return jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
